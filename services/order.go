@@ -4,6 +4,7 @@ import (
 	"go_assignment2/models"
 	"go_assignment2/params"
 	"go_assignment2/repositories"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -23,7 +24,7 @@ func NewOrderService(repo repositories.OrderRepo) *OrderService {
 
 func (o *OrderService) CreateOrder(req *params.CreateOrder) *params.Response {
 	model := models.Order{
-		OrderedAt:    req.OrderedAt,
+		OrderedAt:    time.Now(),
 		CustomerName: req.CustomerName,
 		Items:        req.Items,
 	}
@@ -79,5 +80,21 @@ func (o *OrderService) UpdateOrder(id uint, req *params.CreateOrder) *params.Res
 	return &params.Response{
 		Status:  200,
 		Message: "Update Order Success",
+	}
+}
+
+func (o *OrderService) DeleteOrder(id uint) *params.Response {
+	err := o.orderRepo.DeleteOrder(id)
+	if err != nil {
+		return &params.Response{
+			Status:         404,
+			Error:          "NOT FOUND",
+			AdditionalInfo: err.Error(),
+		}
+	}
+
+	return &params.Response{
+		Status:  200,
+		Message: "Delete Success",
 	}
 }

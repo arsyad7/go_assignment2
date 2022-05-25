@@ -43,7 +43,7 @@ func (o *OrderController) GetOrders(c *gin.Context) {
 
 func (o *OrderController) UpdateOrder(c *gin.Context) {
 	var req *params.CreateOrder
-	orderId := c.Param("id")
+	orderId := c.Param("orderId")
 
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -66,4 +66,20 @@ func (o *OrderController) UpdateOrder(c *gin.Context) {
 	}
 	response := o.orderService.UpdateOrder(uint(id), req)
 	c.JSON(response.Status, response)
+}
+
+func (o *OrderController) DeleteOrder(c *gin.Context) {
+	orderId := c.Param("orderId")
+
+	id, err := strconv.Atoi(orderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, params.Response{
+			Status:         http.StatusBadRequest,
+			Error:          "BAD REQUEST",
+			AdditionalInfo: err,
+		})
+		return
+	}
+	res := o.orderService.DeleteOrder(uint(id))
+	c.JSON(res.Status, res)
 }

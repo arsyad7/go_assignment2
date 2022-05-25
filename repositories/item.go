@@ -9,6 +9,7 @@ import (
 type ItemRepo interface {
 	GetItem(id, orderId uint) (*models.Item, error)
 	UpdateItem(id uint, req *models.Item) error
+	DeleteItem(id uint) error
 }
 
 type itemRepo struct {
@@ -28,5 +29,11 @@ func (i *itemRepo) GetItem(id, orderId uint) (*models.Item, error) {
 func (i *itemRepo) UpdateItem(id uint, req *models.Item) error {
 	var item models.Item
 	err := i.db.Model(&item).Where("id = ?", id).Updates(models.Item{Description: req.Description, ItemCode: req.ItemCode, Quantity: req.Quantity}).Error
+	return err
+}
+
+func (i *itemRepo) DeleteItem(id uint) error {
+	var item models.Item
+	err := i.db.Where("order_id = ?", id).Delete(&item).Error
 	return err
 }

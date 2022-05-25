@@ -11,6 +11,7 @@ type OrderRepo interface {
 	CreateOrder(order *models.Order) error
 	GetOrders() (*[]models.Order, error)
 	UpdateOrders(id uint, order *models.Order) error
+	DeleteOrder(id uint) error
 }
 
 type orderRepo struct {
@@ -33,20 +34,20 @@ func (o *orderRepo) GetOrders() (*[]models.Order, error) {
 
 func (o *orderRepo) UpdateOrders(id uint, req *models.Order) error {
 	var order models.Order
-	// var item models.Item
-	// fmt.Printf("req.Items: %v\n", req.Items[0].BaseItem.ID)
 
 	err := o.db.First(&order, "id = ?", id).Error
 	if err != nil {
-		return fmt.Errorf("Order with id %v not found", id)
+		msg := fmt.Sprintf("Order with id %v not found", id)
+		return fmt.Errorf(msg)
 	}
 
 	itemRepo := NewItemRepo(o.db)
 	for _, v := range req.Items {
 		item, err := itemRepo.GetItem(v.BaseItem.ID, id)
-		// err := o.db.Where("id = ?", v.BaseItem.ID).First(&item).Error
+
 		if err != nil {
-			return fmt.Errorf("Item with id %v not found", v.BaseItem.ID)
+			msg := fmt.Sprintf("Item with id %v not found", v.BaseItem.ID)
+			return fmt.Errorf(msg)
 		}
 		fmt.Println(item)
 		err = itemRepo.UpdateItem(v.BaseItem.ID, &models.Item{
@@ -55,10 +56,35 @@ func (o *orderRepo) UpdateOrders(id uint, req *models.Order) error {
 			ItemCode:    v.ItemCode,
 		})
 		if err != nil {
-			return fmt.Errorf("Item with id %v failed to update", v.BaseItem.ID)
+			msg := fmt.Sprintf("Item with id %v failed to update", v.BaseItem.ID)
+			return fmt.Errorf(msg)
 		}
 	}
 
 	err = o.db.Model(&order).Where("id = ?", id).Updates(models.Order{CustomerName: req.CustomerName, OrderedAt: req.OrderedAt}).Error
 	return err
+}
+
+func (o *orderRepo) DeleteOrder(id uint) error {
+	itemRepo := NewItemRepo(o.db)
+	var order models.Order
+
+	err := o.db.Where("id = ?", id).First(&order).Error
+	if err != nil {
+		msg := fmt.Sprintf("Ordes with id %v not found", id)
+		return fmt.Errorf(msg)
+	}
+
+	err = itemRepo.DeleteItem(id)
+	if err != nil {
+		msg := fmt.Sprintf("Item with order id %v not found", id)
+		return fmt.Errorf(msg)
+	}
+
+	err = o.db.Where("id = ?", id).Delete(&order).Error
+	if err != nil {
+		msg := fmt.Sprintf("Ordes with id %v failed to delete", id)
+		return fmt.Errorf(msg)
+	}
+	return nil
 }

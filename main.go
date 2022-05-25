@@ -22,9 +22,10 @@ func main() {
 	orderService := services.NewOrderService(orderRepo)
 	orderController := controllers.NewOrderController(orderService)
 
-	router.POST("/order", orderController.CreateOrder)
-	router.GET("/order", orderController.GetOrders)
-	router.PUT("/order/:id", orderController.UpdateOrder)
+	router.POST("/orders", orderController.CreateOrder)
+	router.GET("/orders", orderController.GetOrders)
+	router.PUT("/orders/:orderId", orderController.UpdateOrder)
+	router.DELETE("/orders/:orderId", orderController.DeleteOrder)
 
 	log.Println("server running at port ", PORT)
 	router.Run(PORT)
